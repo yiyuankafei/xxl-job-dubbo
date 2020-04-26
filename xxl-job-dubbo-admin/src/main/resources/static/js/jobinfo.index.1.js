@@ -519,6 +519,8 @@ $(function() {
         $("#updateModal .form input[name='executorFailRetryCount']").val( row.executorFailRetryCount );
 		$('#updateModal .form select[name=executorRouteStrategy] option[value='+ row.executorRouteStrategy +']').prop('selected', true);
 		$("#updateModal .form input[name='executorHandler']").val( row.executorHandler );
+		$("#updateModal .form input[name='dubboComponentName']").val( row.dubboComponentName );
+		$("#updateModal .form input[name='dubboMethodName']").val( row.dubboMethodName );
 		$("#updateModal .form textarea[name='executorParam']").val( row.executorParam );
         $("#updateModal .form input[name='childJobId']").val( row.childJobId );
 		$('#updateModal .form select[name=executorBlockStrategy] option[value='+ row.executorBlockStrategy +']').prop('selected', true);

@@ -84,6 +84,12 @@ public class XxlJobServiceImpl implements XxlJobService {
 		if (GlueTypeEnum.BEAN==GlueTypeEnum.match(jobInfo.getGlueType()) && (jobInfo.getExecutorHandler()==null || jobInfo.getExecutorHandler().trim().length()==0) ) {
 			return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("system_please_input")+"JobHandler") );
 		}
+		if (GlueTypeEnum.DUBBO==GlueTypeEnum.match(jobInfo.getGlueType()) && jobInfo.getDubboComponentName()==null || jobInfo.getDubboComponentName().trim().length()==0) {
+			return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("system_please_input")+I18nUtil.getString("jobinfo_dubbo_component")) );
+		}
+		if (GlueTypeEnum.DUBBO==GlueTypeEnum.match(jobInfo.getGlueType()) && jobInfo.getDubboMethodName()==null || jobInfo.getDubboMethodName().trim().length()==0) {
+			return new ReturnT<String>(ReturnT.FAIL_CODE, (I18nUtil.getString("system_please_input")+I18nUtil.getString("jobinfo_dubbo_method")) );
+		}
 
 		// fix "\r" in shell
 		if (GlueTypeEnum.GLUE_SHELL==GlueTypeEnum.match(jobInfo.getGlueType()) && jobInfo.getGlueSource()!=null) {
@@ -223,6 +229,8 @@ public class XxlJobServiceImpl implements XxlJobService {
 		exists_jobInfo.setExecutorFailRetryCount(jobInfo.getExecutorFailRetryCount());
 		exists_jobInfo.setChildJobId(jobInfo.getChildJobId());
 		exists_jobInfo.setTriggerNextTime(nextTriggerTime);
+		exists_jobInfo.setDubboComponentName(jobInfo.getDubboComponentName());
+		exists_jobInfo.setDubboMethodName(jobInfo.getDubboMethodName());
 
 		exists_jobInfo.setUpdateTime(new Date());
         xxlJobInfoDao.update(exists_jobInfo);

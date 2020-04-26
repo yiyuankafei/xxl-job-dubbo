@@ -38,6 +38,9 @@ public class XxlJobInfo {
 	private int triggerStatus;		// 调度状态：0-停止，1-运行
 	private long triggerLastTime;	// 上次调度时间
 	private long triggerNextTime;	// 下次调度时间
+	
+	private String dubboComponentName;	// dubbo组件名
+	private String dubboMethodName;		// dubbo方法名
 
 
 	public int getId() {
@@ -215,4 +218,21 @@ public class XxlJobInfo {
 	public void setTriggerNextTime(long triggerNextTime) {
 		this.triggerNextTime = triggerNextTime;
 	}
+
+	public String getDubboComponentName() {
+		return dubboComponentName;
+	}
+
+	public void setDubboComponentName(String dubboComponentName) {
+		this.dubboComponentName = dubboComponentName;
+	}
+
+	public String getDubboMethodName() {
+		return dubboMethodName;
+	}
+
+	public void setDubboMethodName(String dubboMethodName) {
+		this.dubboMethodName = dubboMethodName;
+	}
+	
 }

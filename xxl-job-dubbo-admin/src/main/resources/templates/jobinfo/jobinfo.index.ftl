@@ -150,6 +150,14 @@
                         <label for="firstname" class="col-sm-2 control-label">JobHandler<font color="red">*</font></label>
                         <div class="col-sm-4"><input type="text" class="form-control" name="executorHandler" placeholder="${I18n.system_please_input}JobHandler" maxlength="100" ></div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="lastname" class="col-sm-2 control-label">${I18n.jobinfo_dubbo_component}<font color="red">*</font></label>
+                        <div class="col-sm-4"><input type="text" class="form-control" name="dubboComponentName" placeholder="${I18n.jobinfo_dubbo_component_placeholder}" maxlength="100" ></div>
+                        <label for="lastname" class="col-sm-2 control-label">${I18n.jobinfo_dubbo_method}<font color="red">*</font></label>
+                        <div class="col-sm-4"><input type="text" class="form-control" name="dubboMethodName" placeholder="${I18n.jobinfo_dubbo_method_placeholder}" maxlength="100" ></div>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="firstname" class="col-sm-2 control-label">${I18n.jobinfo_field_executorBlockStrategy}<font color="red">*</font></label>
                         <div class="col-sm-4">
@@ -346,6 +354,14 @@ exit 0
                         <label for="firstname" class="col-sm-2 control-label">JobHandler<font color="red">*</font></label>
                         <div class="col-sm-4"><input type="text" class="form-control" name="executorHandler" placeholder="${I18n.system_please_input}JobHandler" maxlength="100" ></div>
                     </div>
+                    
+                    <div class="form-group">
+                        <label for="lastname" class="col-sm-2 control-label">${I18n.jobinfo_dubbo_component}<font color="red">*</font></label>
+                        <div class="col-sm-4"><input type="text" class="form-control" name="dubboComponentName" placeholder="${I18n.jobinfo_dubbo_component_placeholder}" maxlength="100" ></div>
+                        <label for="lastname" class="col-sm-2 control-label">${I18n.jobinfo_dubbo_method}<font color="red">*</font></label>
+                        <div class="col-sm-4"><input type="text" class="form-control" name="dubboMethodName" placeholder="${I18n.jobinfo_dubbo_method_placeholder}" maxlength="100" ></div>
+                    </div>
+                    
                     <div class="form-group">
                         <label for="firstname" class="col-sm-2 control-label">${I18n.jobinfo_field_executorBlockStrategy}<font color="red">*</font></label>
                         <div class="col-sm-4">

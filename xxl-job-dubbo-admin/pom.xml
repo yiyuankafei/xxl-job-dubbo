@@ -73,18 +73,28 @@
 			<version>${project.parent.version}</version>
 		</dependency>
 		
-		<!-- dubbo -->
 		<dependency>
 		    <groupId>com.alibaba</groupId>
 		    <artifactId>dubbo</artifactId>
 		    <version>2.6.5</version>
 		</dependency>
 		
-		<!-- nacos-discovery -->
+		<dependency>
+		    <groupId>com.alibaba</groupId>
+		    <artifactId>dubbo-registry-nacos</artifactId>
+		    <version>0.0.1</version>
+		</dependency>
+		
+		<dependency>
+		    <groupId>com.alibaba.boot</groupId>
+		    <artifactId>dubbo-spring-boot-starter</artifactId>
+		    <version>0.2.1.RELEASE</version>
+		</dependency>
+		
 		<dependency>
 		    <groupId>com.alibaba.boot</groupId>
 		    <artifactId>nacos-discovery-spring-boot-starter</artifactId>
-		    <version>0.2.3</version>
+		    <version>0.2.1</version>
 		</dependency>
 
 	</dependencies>

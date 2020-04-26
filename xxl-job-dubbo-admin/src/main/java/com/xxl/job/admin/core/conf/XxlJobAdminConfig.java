@@ -1,8 +1,11 @@
 package com.xxl.job.admin.core.conf;
 
+import com.alibaba.nacos.api.annotation.NacosInjected;
+import com.alibaba.nacos.api.naming.NamingService;
 import com.xxl.job.admin.core.alarm.JobAlarmer;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.dao.*;
+
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
@@ -11,6 +14,7 @@ import org.springframework.stereotype.Component;
 
 import javax.annotation.Resource;
 import javax.sql.DataSource;
+
 import java.util.Arrays;
 
 /**
@@ -21,6 +25,7 @@ import java.util.Arrays;
 
 @Component
 public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
+	
 
     private static XxlJobAdminConfig adminConfig = null;
     public static XxlJobAdminConfig getAdminConfig() {
@@ -85,6 +90,9 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     private DataSource dataSource;
     @Resource
     private JobAlarmer jobAlarmer;
+    
+    @NacosInjected
+    private NamingService namingService;
 
 
     public String getI18n() {
@@ -153,6 +161,10 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
 
     public JobAlarmer getJobAlarmer() {
         return jobAlarmer;
+    }
+    
+    public NamingService getNamingService() {
+        return namingService;
     }
 
 }

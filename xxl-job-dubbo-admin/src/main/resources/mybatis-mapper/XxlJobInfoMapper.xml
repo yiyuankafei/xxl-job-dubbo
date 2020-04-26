@@ -33,6 +33,9 @@
 		<result column="trigger_status" property="triggerStatus" />
 		<result column="trigger_last_time" property="triggerLastTime" />
 		<result column="trigger_next_time" property="triggerNextTime" />
+		
+		<result column="dubbo_component_name" property="dubboComponentName" />
+		<result column="dubbo_method_name" property="dubboMethodName" />
 	</resultMap>
 
 	<sql id="Base_Column_List">
@@ -57,7 +60,9 @@
 		t.child_jobid,
 		t.trigger_status,
 		t.trigger_last_time,
-		t.trigger_next_time
+		t.trigger_next_time,
+		t.dubbo_component_name,
+		t.dubbo_method_name
 	</sql>
 
 	<select id="pageList" parameterType="java.util.HashMap" resultMap="XxlJobInfo">
@@ -128,7 +133,9 @@
 			child_jobid,
 			trigger_status,
 			trigger_last_time,
-			trigger_next_time
+			trigger_next_time,
+			dubbo_component_name,
+			dubbo_method_name
 		) VALUES (
 			#{jobGroup},
 			#{jobCron},
@@ -150,7 +157,9 @@
 			#{childJobId},
 			#{triggerStatus},
 			#{triggerLastTime},
-			#{triggerNextTime}
+			#{triggerNextTime},
+			#{dubboComponentName},
+			#{dubboMethodName}
 		);
 		<!--<selectKey resultType="java.lang.Integer" order="AFTER" keyProperty="id">
 			SELECT LAST_INSERT_ID()
@@ -186,7 +195,9 @@
 			child_jobid = #{childJobId},
 			trigger_status = #{triggerStatus},
 			trigger_last_time = #{triggerLastTime},
-			trigger_next_time = #{triggerNextTime}
+			trigger_next_time = #{triggerNextTime},
+			dubbo_component_name = #{dubboComponentName},
+			dubbo_method_name = #{dubboMethodName}
 		WHERE id = #{id}
 	</update>
 

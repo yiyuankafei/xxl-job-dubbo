@@ -1,5 +1,11 @@
 package com.xxl.job.admin.core.trigger;
 
+import com.alibaba.dubbo.config.ReferenceConfig;
+import com.alibaba.dubbo.config.utils.ReferenceConfigCache;
+import com.alibaba.dubbo.rpc.service.GenericService;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.client.naming.utils.RandomUtils;
 import com.xxl.job.admin.core.conf.XxlJobAdminConfig;
 import com.xxl.job.admin.core.model.XxlJobGroup;
 import com.xxl.job.admin.core.model.XxlJobInfo;
@@ -11,12 +17,15 @@ import com.xxl.job.core.biz.ExecutorBiz;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
+import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.util.IpUtil;
 import com.xxl.job.core.util.ThrowableUtil;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * xxl-job trigger
@@ -122,49 +131,78 @@ public class XxlJobTrigger {
         jobLog.setTriggerTime(new Date());
         XxlJobAdminConfig.getAdminConfig().getXxlJobLogDao().save(jobLog);
         logger.debug(">>>>>>>>>>> xxl-job trigger start, jobId:{}", jobLog.getId());
-
-        // 2、init trigger-param
-        TriggerParam triggerParam = new TriggerParam();
-        triggerParam.setJobId(jobInfo.getId());
-        triggerParam.setExecutorHandler(jobInfo.getExecutorHandler());
-        triggerParam.setExecutorParams(jobInfo.getExecutorParam());
-        triggerParam.setExecutorBlockStrategy(jobInfo.getExecutorBlockStrategy());
-        triggerParam.setExecutorTimeout(jobInfo.getExecutorTimeout());
-        triggerParam.setLogId(jobLog.getId());
-        triggerParam.setLogDateTime(jobLog.getTriggerTime().getTime());
-        triggerParam.setGlueType(jobInfo.getGlueType());
-        triggerParam.setGlueSource(jobInfo.getGlueSource());
-        triggerParam.setGlueUpdatetime(jobInfo.getGlueUpdatetime().getTime());
-        triggerParam.setBroadcastIndex(index);
-        triggerParam.setBroadcastTotal(total);
-
-        // 3、init address
+        
         String address = null;
         ReturnT<String> routeAddressResult = null;
-        if (group.getRegistryList()!=null && !group.getRegistryList().isEmpty()) {
-            if (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) {
-                if (index < group.getRegistryList().size()) {
-                    address = group.getRegistryList().get(index);
+        ReturnT<String> triggerResult = null;
+        
+        if (GlueTypeEnum.DUBBO==GlueTypeEnum.match(jobInfo.getGlueType())) {
+        	
+        	try {
+        		NamingService namingService = XxlJobAdminConfig.getAdminConfig().getNamingService();
+            	List<Instance> list = namingService.getAllInstances(jobInfo.getDubboComponentName());
+            	Instance instance = list.get(RandomUtils.nextInt(list.size()));
+            	
+            	// 创建服务实例
+        		ReferenceConfig<GenericService> reference = new ReferenceConfig<GenericService>();
+                reference.setGeneric(true);
+                reference.setInterface(instance.getMetadata().get("interface"));
+                reference.setVersion(instance.getMetadata().get("version"));
+                
+                // 获取缓存中的实例
+                ReferenceConfigCache cache = ReferenceConfigCache.getCache(); 
+                GenericService genericService = cache.get(reference);
+                
+                // 调用实例
+                Object result = genericService.$invoke(jobInfo.getDubboMethodName(), null, null);
+                
+            	
+        	} catch (Exception e) {
+        		e.printStackTrace();
+        	}
+        	triggerResult = new ReturnT<String>(ReturnT.SUCCESS_CODE, null);
+        } else {
+        	// 2、init trigger-param
+            TriggerParam triggerParam = new TriggerParam();
+            triggerParam.setJobId(jobInfo.getId());
+            triggerParam.setExecutorHandler(jobInfo.getExecutorHandler());
+            triggerParam.setExecutorParams(jobInfo.getExecutorParam());
+            triggerParam.setExecutorBlockStrategy(jobInfo.getExecutorBlockStrategy());
+            triggerParam.setExecutorTimeout(jobInfo.getExecutorTimeout());
+            triggerParam.setLogId(jobLog.getId());
+            triggerParam.setLogDateTime(jobLog.getTriggerTime().getTime());
+            triggerParam.setGlueType(jobInfo.getGlueType());
+            triggerParam.setGlueSource(jobInfo.getGlueSource());
+            triggerParam.setGlueUpdatetime(jobInfo.getGlueUpdatetime().getTime());
+            triggerParam.setBroadcastIndex(index);
+            triggerParam.setBroadcastTotal(total);
+
+            // 3、init address
+            if (group.getRegistryList()!=null && !group.getRegistryList().isEmpty()) {
+                if (ExecutorRouteStrategyEnum.SHARDING_BROADCAST == executorRouteStrategyEnum) {
+                    if (index < group.getRegistryList().size()) {
+                        address = group.getRegistryList().get(index);
+                    } else {
+                        address = group.getRegistryList().get(0);
+                    }
                 } else {
-                    address = group.getRegistryList().get(0);
+                    routeAddressResult = executorRouteStrategyEnum.getRouter().route(triggerParam, group.getRegistryList());
+                    if (routeAddressResult.getCode() == ReturnT.SUCCESS_CODE) {
+                        address = routeAddressResult.getContent();
+                    }
                 }
             } else {
-                routeAddressResult = executorRouteStrategyEnum.getRouter().route(triggerParam, group.getRegistryList());
-                if (routeAddressResult.getCode() == ReturnT.SUCCESS_CODE) {
-                    address = routeAddressResult.getContent();
-                }
+                routeAddressResult = new ReturnT<String>(ReturnT.FAIL_CODE, I18nUtil.getString("jobconf_trigger_address_empty"));
             }
-        } else {
-            routeAddressResult = new ReturnT<String>(ReturnT.FAIL_CODE, I18nUtil.getString("jobconf_trigger_address_empty"));
+
+            // 4、trigger remote executor
+            if (address != null) {
+                triggerResult = runExecutor(triggerParam, address);
+            } else {
+                triggerResult = new ReturnT<String>(ReturnT.FAIL_CODE, null);
+            }
         }
 
-        // 4、trigger remote executor
-        ReturnT<String> triggerResult = null;
-        if (address != null) {
-            triggerResult = runExecutor(triggerParam, address);
-        } else {
-            triggerResult = new ReturnT<String>(ReturnT.FAIL_CODE, null);
-        }
 
         // 5、collection trigger info
         StringBuffer triggerMsgSb = new StringBuffer();
