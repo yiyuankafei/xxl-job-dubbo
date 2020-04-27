@@ -1,10 +1,9 @@
 package com.xxl.job.admin.core.conf;
 
-import com.alibaba.nacos.api.annotation.NacosInjected;
-import com.alibaba.nacos.api.naming.NamingService;
-import com.xxl.job.admin.core.alarm.JobAlarmer;
-import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
-import com.xxl.job.admin.dao.*;
+import java.util.Arrays;
+
+import javax.annotation.Resource;
+import javax.sql.DataSource;
 
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.InitializingBean;
@@ -12,10 +11,16 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Component;
 
-import javax.annotation.Resource;
-import javax.sql.DataSource;
-
-import java.util.Arrays;
+import com.alibaba.nacos.api.annotation.NacosInjected;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.xxl.job.admin.core.alarm.JobAlarmer;
+import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
+import com.xxl.job.admin.dao.XxlJobGroupDao;
+import com.xxl.job.admin.dao.XxlJobInfoDao;
+import com.xxl.job.admin.dao.XxlJobLogDao;
+import com.xxl.job.admin.dao.XxlJobLogReportDao;
+import com.xxl.job.admin.dao.XxlJobRegistryDao;
+import com.xxl.job.core.biz.AdminBiz;
 
 /**
  * xxl-job config
@@ -90,7 +95,8 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     private DataSource dataSource;
     @Resource
     private JobAlarmer jobAlarmer;
-    
+    @Resource
+    private AdminBiz adminBiz;
     @NacosInjected
     private NamingService namingService;
 
@@ -165,6 +171,10 @@ public class XxlJobAdminConfig implements InitializingBean, DisposableBean {
     
     public NamingService getNamingService() {
         return namingService;
+    }
+    
+    public AdminBiz getAdminBiz() {
+        return adminBiz;
     }
 
 }

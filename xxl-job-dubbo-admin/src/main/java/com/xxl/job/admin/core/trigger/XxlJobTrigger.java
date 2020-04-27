@@ -1,5 +1,17 @@
 package com.xxl.job.admin.core.trigger;
 
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+
 import com.alibaba.dubbo.config.ReferenceConfig;
 import com.alibaba.dubbo.config.utils.ReferenceConfigCache;
 import com.alibaba.dubbo.rpc.service.GenericService;
@@ -14,18 +26,13 @@ import com.xxl.job.admin.core.route.ExecutorRouteStrategyEnum;
 import com.xxl.job.admin.core.scheduler.XxlJobScheduler;
 import com.xxl.job.admin.core.util.I18nUtil;
 import com.xxl.job.core.biz.ExecutorBiz;
+import com.xxl.job.core.biz.model.HandleCallbackParam;
 import com.xxl.job.core.biz.model.ReturnT;
 import com.xxl.job.core.biz.model.TriggerParam;
 import com.xxl.job.core.enums.ExecutorBlockStrategyEnum;
 import com.xxl.job.core.glue.GlueTypeEnum;
 import com.xxl.job.core.util.IpUtil;
 import com.xxl.job.core.util.ThrowableUtil;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import java.util.Date;
-import java.util.List;
 
 /**
  * xxl-job trigger
@@ -137,30 +144,40 @@ public class XxlJobTrigger {
         ReturnT<String> triggerResult = null;
         
         if (GlueTypeEnum.DUBBO==GlueTypeEnum.match(jobInfo.getGlueType())) {
-        	
         	try {
         		NamingService namingService = XxlJobAdminConfig.getAdminConfig().getNamingService();
             	List<Instance> list = namingService.getAllInstances(jobInfo.getDubboComponentName());
-            	Instance instance = list.get(RandomUtils.nextInt(list.size()));
-            	
-            	// 创建服务实例
-        		ReferenceConfig<GenericService> reference = new ReferenceConfig<GenericService>();
-                reference.setGeneric(true);
-                reference.setInterface(instance.getMetadata().get("interface"));
-                reference.setVersion(instance.getMetadata().get("version"));
-                
-                // 获取缓存中的实例
-                ReferenceConfigCache cache = ReferenceConfigCache.getCache(); 
-                GenericService genericService = cache.get(reference);
-                
-                // 调用实例
-                Object result = genericService.$invoke(jobInfo.getDubboMethodName(), null, null);
-                
+            	if (list.size() == 0) {
+            		triggerResult = new ReturnT<String>(ReturnT.FAIL_CODE, I18nUtil.getString("jobconf_trigger_provider_empty"));
+            	} else {
+            		Instance instance = list.get(RandomUtils.nextInt(list.size()));
+                	
+            		ReferenceConfig<GenericService> reference = new ReferenceConfig<GenericService>();
+                    reference.setGeneric(true);
+                    reference.setInterface(instance.getMetadata().get("interface"));
+                    reference.setVersion(instance.getMetadata().get("version"));
+                    
+                    ReferenceConfigCache cache = ReferenceConfigCache.getCache(); 
+                    GenericService genericService = cache.get(reference);
+                    
+                    new Thread(() -> {
+                    	HandleCallbackParam callbackParam = new HandleCallbackParam();
+                    	callbackParam.setLogId(jobLog.getId());
+                    	try {
+                    		jobLog.getId();
+                    		genericService.$invoke(jobInfo.getDubboMethodName(), null, null);
+                    		callbackParam.setExecuteResult(new ReturnT<String>(ReturnT.SUCCESS_CODE, I18nUtil.getString("jobconf_handle_success")));
+                    	} catch (Exception e) {
+                    		callbackParam.setExecuteResult(new ReturnT<String>(ReturnT.FAIL_CODE, getExceptionTrace(e)));
+                    	}
+                    	XxlJobAdminConfig.getAdminConfig().getAdminBiz().callback(Collections.singletonList(callbackParam));
+                    }).start();
+                    triggerResult = new ReturnT<String>(ReturnT.SUCCESS_CODE, null);
+            	}
             	
         	} catch (Exception e) {
-        		e.printStackTrace();
+        		triggerResult = new ReturnT<String>(ReturnT.FAIL_CODE, getExceptionTrace(e));
         	}
-        	triggerResult = new ReturnT<String>(ReturnT.SUCCESS_CODE, null);
         } else {
         	// 2、init trigger-param
             TriggerParam triggerParam = new TriggerParam();
@@ -259,6 +276,13 @@ public class XxlJobTrigger {
 
         runResult.setMsg(runResultSB.toString());
         return runResult;
+    }
+    
+    private static String getExceptionTrace(Exception e) {
+    	StringWriter stringWriter = new StringWriter();
+        PrintWriter printWriter = new PrintWriter(stringWriter);
+        e.printStackTrace(printWriter);
+        return stringWriter.toString();
     }
 
 }
