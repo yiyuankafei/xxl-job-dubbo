@@ -156,6 +156,9 @@ public class XxlJobTrigger {
                     reference.setGeneric(true);
                     reference.setInterface(instance.getMetadata().get("interface"));
                     reference.setVersion(instance.getMetadata().get("version"));
+                    if (jobInfo.getExecutorTimeout() > 0) {
+                    	reference.setTimeout(jobInfo.getExecutorTimeout() * 1000);
+                    }
                     
                     ReferenceConfigCache cache = ReferenceConfigCache.getCache(); 
                     GenericService genericService = cache.get(reference);

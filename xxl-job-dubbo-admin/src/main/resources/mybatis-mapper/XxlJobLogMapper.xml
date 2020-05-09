@@ -260,6 +260,13 @@
 				SELECT t2.registry_value
 				FROM xxl_job_registry AS t2
 			)
+			and EXISTS (
+				SELECT 1
+				FROM xxl_job_info t3
+				WHERE t3.id = t.job_id
+				AND t3.executor_timeout > 0
+				AND TIMESTAMPDIFF(SECOND,t.trigger_time,NOW())  > t3.executor_timeout
+			)
 	</select>
 
 </mapper>
